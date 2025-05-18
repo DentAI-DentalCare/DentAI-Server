@@ -139,7 +139,7 @@ class CariesDetectionController:
   
     
     @staticmethod
-    def classify_efficientnet():
+    def classify_efficientnet(efficientnet_model):
         class_labels = {
         0: "Caries Class 1",
         1: "Caries Class 2",
@@ -165,7 +165,7 @@ class CariesDetectionController:
             image_file.save(image_path)
 
             # === Load Model === #
-            model_path = os.path.join(project_root, "models", "efficientnet_best_model.h5")
+            model_path = os.path.join(project_root, "models", efficientnet_model)
             if not os.path.exists(model_path):
                 raise FileNotFoundError(f"Model not found at {model_path}")
             
