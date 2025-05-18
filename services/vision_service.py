@@ -9,10 +9,9 @@ from bidi.algorithm import get_display
 from services.llm_service import get_national_id_info
 from dotenv import load_dotenv
 
-   # Set credentials only when needed
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = os.path.join(
-        os.path.dirname(__file__), '..', 'credentials', 'wired-aspect-434620-a2-536c7b82f15b.json'
-)
+
+load_dotenv()
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 def preprocess_image(image_path, output_path="preprocessed_image.jpg", padding=50, background_color=(255, 255, 255)):
     image = Image.open(image_path)
     new_width = image.width + 2 * padding

@@ -136,16 +136,17 @@ class CariesDetectionController:
             return jsonify({"error": str(e)}), 500
 
 
-    class_labels = {
+  
+    
+    @staticmethod
+    def classify_efficientnet():
+        class_labels = {
         0: "Caries Class 1",
         1: "Caries Class 2",
         2: "Caries Class 3",
         3: "Caries Class 4",
         4: "Caries Class 5"
-    }
-    
-    @staticmethod
-    def classify_efficientnet():
+        }
         if 'image' not in request.files:
             return jsonify({"error": "No image file provided"}), 400
 
