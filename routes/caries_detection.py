@@ -17,13 +17,13 @@ def classify_yolov8_vertices():
 
 
 
-@caries_detection_blueprint.route("/efficientnet/<efficientnet_model>", methods=["POST"])
-@jwt_required()
-def classify_efficientnet_dynamic(efficientnet_model):
-    return CariesDetectionController.classify_efficientnet(efficientnet_model)
+# @caries_detection_blueprint.route("/efficientnet/<efficientnet_model>", methods=["POST"])
+# @jwt_required()
+# def classify_efficientnet_dynamic(efficientnet_model):
+#     return CariesDetectionController.classify_efficientnet(efficientnet_model)
 
 
-@caries_detection_blueprint.route("/yolov8-efficientnet/<efficientnet_model>", methods=["POST"])
-@jwt_required()
-def classify_yolov8_to_efficientnet_dynamic(efficientnet_model):
-    return CariesDetectionController.detect_and_classify_yolov8_to_efficientnet(efficientnet_model)
+# @caries_detection_blueprint.route("/yolov8-efficientnet/<efficientnet_model>", methods=["POST"])
+# @jwt_required()
+# def classify_yolov8_to_efficientnet_dynamic(efficientnet_model):
+#     return CariesDetectionController.detect_and_classify_yolov8_to_efficientnet(efficientnet_model)

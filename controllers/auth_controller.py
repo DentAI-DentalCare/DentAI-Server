@@ -36,8 +36,14 @@ class AuthController:
         if not first_name or not last_name or not password or not birth_date or not email or not national_id or not gender or not role:
             return jsonify({"error": "First Name, Last Name, National ID, gender, email, role, and password are required"}), 400
 
+        if User.query.filter_by(national_id=national_id).first():
+                return jsonify({"error": "National ID already exists"}), 400
+        
         if User.query.filter_by(email=email).first():
             return jsonify({"error": "Email already exists"}), 400
+        
+        if User.query.filter_by(phone_number=phone_number).first():
+            return jsonify({"error": "Phone Number already exists"}), 400
 
         hashed_password = generate_password_hash(password)
 

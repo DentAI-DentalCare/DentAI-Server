@@ -26,8 +26,8 @@ class UserController:
 
     @staticmethod
     def update_profile():
-        current_user = get_jwt_identity()
-        user = User.query.filter_by(email=current_user).first()
+        current_user_email = get_jwt_identity()
+        user = User.query.filter_by(email=current_user_email).first()
 
         if not user:
             return jsonify({"error": "User not found"}), 404
@@ -35,11 +35,26 @@ class UserController:
         data = request.json
         print(f"Data received for update: {data}")
 
+        # Check if new email is provided and it's different from the current one
+        new_email = data.get("email")
+        if new_email and new_email != user.email:
+            existing_email_user = User.query.filter_by(email=new_email).first()
+            if existing_email_user:
+                return jsonify({"error": "Email already in use"}), 400
+            user.email = new_email
+
+        # Check if new phone number is provided and it's different from current one
+        new_phone = data.get("phone_number")
+        if new_phone and new_phone != user.phone_number:
+            existing_phone_user = User.query.filter_by(phone_number=new_phone).first()
+            if existing_phone_user:
+                return jsonify({"error": "Phone number already in use"}), 400
+            user.phone_number = new_phone
+
         user.first_name = data.get("first_name", user.first_name)
         user.last_name = data.get("last_name", user.last_name)
         user.birth_date = data.get("birth_date", user.birth_date)
         user.gender = data.get("gender", user.gender)
-        user.phone_number = data.get("phone_number", user.phone_number)
 
         if user.role.value.lower() == "doctor":
             doctor = Doctor.query.filter_by(user_id=user.user_id).first()
@@ -51,6 +66,7 @@ class UserController:
 
         db.session.commit()
         return jsonify({"message": "Profile updated successfully"}), 200
+
 
     @staticmethod
     def delete_account():
