@@ -338,3 +338,91 @@ class CariesDetectionController:
         except Exception as e:
             return jsonify({"error": str(e)}), 500
         
+
+    @staticmethod
+    def _classify_yolov8_vertices():
+        if 'image' not in request.files:
+            return jsonify({"error": "No image file provided"}), 400
+
+        image_file = request.files['image']
+        if image_file.filename == '':
+            return jsonify({"error": "Empty filename"}), 400
+
+        try:
+            project_root = current_app.root_path
+            temp_dir = os.path.join(project_root, "temp_uploads")
+            os.makedirs(temp_dir, exist_ok=True)
+
+            temp_filename = f"{uuid.uuid4().hex}.jpg"
+            image_path = os.path.join(temp_dir, temp_filename)
+            image_file.save(image_path)
+
+            model_path = os.path.join(project_root, "models", "yolov8m_100epochs.pt")
+            if not os.path.exists(model_path):
+                raise FileNotFoundError(f"Model not found at {model_path}")
+
+            model = YOLO(model_path)
+            results = model(image_path)
+
+            os.remove(image_path)
+            try:
+                os.rmdir(temp_dir)
+            except OSError:
+                pass
+
+            boxes_raw = []
+            for box in results[0].boxes:
+                class_id = int(box.cls[0])
+                confidence = float(box.conf[0])
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                class_name = results[0].names[class_id]
+                area = (x2 - x1) * (y2 - y1)
+
+                boxes_raw.append({
+                    "class_id": class_id,
+                    "class_name": class_name,
+                    "confidence": confidence,
+                    "x1": x1, "y1": y1, "x2": x2, "y2": y2,
+                    "area": area
+                })
+
+            filtered_boxes = []
+            for i, boxA in enumerate(boxes_raw):
+                is_inside = False
+                for j, boxB in enumerate(boxes_raw):
+                    if i == j:
+                        continue
+                    if (
+                        boxA["x1"] >= boxB["x1"] and boxA["y1"] >= boxB["y1"] and
+                        boxA["x2"] <= boxB["x2"] and boxA["y2"] <= boxB["y2"] and
+                        boxA["area"] < boxB["area"]
+                    ):
+                        is_inside = True
+                        break
+                if not is_inside:
+                    filtered_boxes.append(boxA)
+
+            class_summary = defaultdict(int)
+            output_boxes = []
+            for box in filtered_boxes:
+                class_name = box["class_name"]
+                class_summary[class_name] += 1
+
+                output_boxes.append({
+                    "class_name": class_name,
+                    "confidence": round(box["confidence"], 3),
+                    "x1": box["x1"],
+                    "y1": box["y1"],
+                    "x2": box["x2"],
+                    "y2": box["y2"]
+                })
+
+            return jsonify({
+                "class_summary": dict(class_summary),
+                "detections": output_boxes
+            }), 200
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+

@@ -10,6 +10,12 @@ caries_detection_blueprint = Blueprint("caries_detection_blueprint", __name__)
 def classify_yolov8(yolov8_model):
     return CariesDetectionController._classify_yolov8(yolov8_model)
 
+@caries_detection_blueprint.route("/yolov8/vertices", methods=["POST"])
+@jwt_required()
+def classify_yolov8_vertices():
+    return CariesDetectionController._classify_yolov8_vertices()
+
+
 
 @caries_detection_blueprint.route("/efficientnet/<efficientnet_model>", methods=["POST"])
 @jwt_required()
