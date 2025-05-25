@@ -10,9 +10,8 @@ from routes.user import user_blueprint
 from routes.caries_detection import caries_detection_blueprint
 from routes.doctor import doctor_blueprint
 from routes.appointment import appointment_blueprint
-from routes.appointment import appointment_blueprint
 from routes.dummy_data import dummy_blueprint
-from routes.consultation import consultation_blueprint
+from routes.ask_a_dentist import ask_a_dentist_blueprint
 from routes.insurance import insurance_blueprint
 from routes.ocr import ocr_blueprint
 from models.user import db  # ✅ this line is key
@@ -47,7 +46,7 @@ app.register_blueprint(user_blueprint, url_prefix="/api/user")
 app.register_blueprint(doctor_blueprint, url_prefix="/api/doctor")
 app.register_blueprint(appointment_blueprint, url_prefix="/api/appointment")
 app.register_blueprint(caries_detection_blueprint, url_prefix="/api/caries-detection")
-app.register_blueprint(consultation_blueprint, url_prefix="/api/consultation")
+app.register_blueprint(ask_a_dentist_blueprint, url_prefix="/api/consultation")
 app.register_blueprint(insurance_blueprint, url_prefix="/api/insurance")
 app.register_blueprint(ocr_blueprint, url_prefix="/api/ocr")
 app.register_blueprint(dummy_blueprint, url_prefix="/api")

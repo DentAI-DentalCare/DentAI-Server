@@ -9,7 +9,7 @@ from models.doctor import Doctor
 import cloudinary.uploader
 
 
-class ConsultationController:
+class AskADentistController:
 
     @staticmethod
     def get_all_doctors_info():
@@ -21,14 +21,14 @@ class ConsultationController:
             if user:
                 result.append({
                     "doctor_id": doctor.doctor_id,
-                    "user_id": user.user_id,
+                    "id": user.user_id,
                     "profile_picture_url": user.profile_picture_url,
                     "name": f"{user.first_name} {user.last_name}",
                     "specialization": doctor.specialization
                 })
 
         return jsonify({"doctors": result}), 200
-   
+    
     @staticmethod
     def send_message():
         current_user_email = get_jwt_identity()
@@ -36,33 +36,20 @@ class ConsultationController:
         if not user:
             return jsonify({"error": "User not found"}), 404
 
-        recipient_id = request.form.get("recipient_id")
+        recipient_ids_raw = request.form.get("recipient_id")
         message_text = request.form.get("message")
         image_file = request.files.get("file")
 
-        if not recipient_id or (not message_text and not image_file):
-            return jsonify({"error": "Recipient and either message or image are required"}), 400
+        if not recipient_ids_raw or (not message_text and not image_file):
+            return jsonify({"error": "Recipient(s) and either message or image are required"}), 400
 
-        # Determine doctor_id and patient_id
-        if user.role.value == "Doctor":
-            doctor = Doctor.query.filter_by(user_id=user.user_id).first()
-            if not doctor:
-                return jsonify({"error": "Doctor not found"}), 404
-            doctor_id = doctor.doctor_id
-            patient_id = int(recipient_id)
-        else:
-            doctor = Doctor.query.filter_by(user_id=int(recipient_id)).first()
-            if not doctor:
-                return jsonify({"error": "Recipient is not a valid doctor"}), 404
-            doctor_id = doctor.doctor_id
-            patient_id = user.user_id
+        # Split multiple IDs
+        try:
+            recipient_ids = [int(id.strip()) for id in recipient_ids_raw.split(',')]
+        except ValueError:
+            return jsonify({"error": "Invalid recipient_id format. Must be comma-separated integers."}), 400
 
-        # Check for existing thread
-        thread = ConsultationThread.query.filter_by(
-            patient_id=patient_id, doctor_id=doctor_id
-        ).first()
-
-        # Upload image if exists
+        # Upload image once
         image_url = None
         image_record = None
         if image_file:
@@ -72,28 +59,121 @@ class ConsultationController:
             db.session.add(image_record)
             db.session.flush()
 
-        # Create thread if not exists
-        if not thread:
-            thread = ConsultationThread(
-                patient_id=patient_id,
-                doctor_id=doctor_id,
-                image_id=image_record.image_id if image_record else None
-            )
-            db.session.add(thread)
-            db.session.flush()
+        sent_to = []
 
-        # Save message
-        sender_role = SenderRoleEnum.Doctor if user.role.value == "Doctor" else SenderRoleEnum.Patient
-        new_message = ConsultationMessage(
-            thread_id=thread.thread_id,
-            sender_role=sender_role,
-            message=message_text,
-            image_url=image_url
-        )
-        db.session.add(new_message)
+        for rid in recipient_ids:
+            # Determine doctor_id and patient_id per recipient
+            if user.role.value == "Doctor":
+                doctor = Doctor.query.filter_by(user_id=user.user_id).first()
+                if not doctor:
+                    continue  # skip if sender-doctor is invalid
+                doctor_id = doctor.doctor_id
+                patient_id = rid
+            else:
+                doctor = Doctor.query.filter_by(user_id=rid).first()
+                if not doctor:
+                    continue  # skip if recipient is not a doctor
+                doctor_id = doctor.doctor_id
+                patient_id = user.user_id
+
+            # Check or create thread
+            thread = ConsultationThread.query.filter_by(
+                patient_id=patient_id, doctor_id=doctor_id
+            ).first()
+
+            if not thread:
+                thread = ConsultationThread(
+                    patient_id=patient_id,
+                    doctor_id=doctor_id,
+                    image_id=image_record.image_id if image_record else None
+                )
+                db.session.add(thread)
+                db.session.flush()
+
+            # Save message
+            sender_role = SenderRoleEnum.Doctor if user.role.value == "Doctor" else SenderRoleEnum.Patient
+            new_message = ConsultationMessage(
+                thread_id=thread.thread_id,
+                sender_role=sender_role,
+                message=message_text,
+                image_url=image_url
+            )
+            db.session.add(new_message)
+            sent_to.append(rid)
+
         db.session.commit()
 
-        return jsonify({"message": "Message sent"}), 201
+        return jsonify({
+            "message": "Message sent successfully",
+            "sent_to_user_ids": sent_to
+        }), 201
+
+   
+    # @staticmethod
+    # def send_message():
+    #     current_user_email = get_jwt_identity()
+    #     user = User.query.filter_by(email=current_user_email).first()
+    #     if not user:
+    #         return jsonify({"error": "User not found"}), 404
+
+    #     recipient_id = request.form.get("recipient_id")
+    #     message_text = request.form.get("message")
+    #     image_file = request.files.get("file")
+
+    #     if not recipient_id or (not message_text and not image_file):
+    #         return jsonify({"error": "Recipient and either message or image are required"}), 400
+
+    #     # Determine doctor_id and patient_id
+    #     if user.role.value == "Doctor":
+    #         doctor = Doctor.query.filter_by(user_id=user.user_id).first()
+    #         if not doctor:
+    #             return jsonify({"error": "Doctor not found"}), 404
+    #         doctor_id = doctor.doctor_id
+    #         patient_id = int(recipient_id)
+    #     else:
+    #         doctor = Doctor.query.filter_by(user_id=int(recipient_id)).first()
+    #         if not doctor:
+    #             return jsonify({"error": "Recipient is not a valid doctor"}), 404
+    #         doctor_id = doctor.doctor_id
+    #         patient_id = user.user_id
+
+    #     # Check for existing thread
+    #     thread = ConsultationThread.query.filter_by(
+    #         patient_id=patient_id, doctor_id=doctor_id
+    #     ).first()
+
+    #     # Upload image if exists
+    #     image_url = None
+    #     image_record = None
+    #     if image_file:
+    #         upload_result = cloudinary.uploader.upload(image_file, folder=f"{user.email}/consultations")
+    #         image_url = upload_result["secure_url"]
+    #         image_record = UserImage(image_url=image_url, user_id=user.user_id)
+    #         db.session.add(image_record)
+    #         db.session.flush()
+
+    #     # Create thread if not exists
+    #     if not thread:
+    #         thread = ConsultationThread(
+    #             patient_id=patient_id,
+    #             doctor_id=doctor_id,
+    #             image_id=image_record.image_id if image_record else None
+    #         )
+    #         db.session.add(thread)
+    #         db.session.flush()
+
+    #     # Save message
+    #     sender_role = SenderRoleEnum.Doctor if user.role.value == "Doctor" else SenderRoleEnum.Patient
+    #     new_message = ConsultationMessage(
+    #         thread_id=thread.thread_id,
+    #         sender_role=sender_role,
+    #         message=message_text,
+    #         image_url=image_url
+    #     )
+    #     db.session.add(new_message)
+    #     db.session.commit()
+
+    #     return jsonify({"message": "Message sent"}), 201
 
 
     @staticmethod
@@ -120,7 +200,7 @@ class ConsultationController:
                     "user_id": patient.user_id,
                     "user_name": f"{patient.first_name} {patient.last_name}",
                     "profile_picture_url": f"{patient.profile_picture_url}",
-                    "last_message": last_msg.message if last_msg else "",
+                    "last_message": "[Image]" if last_msg and not last_msg.message and last_msg.image_url else (last_msg.message if last_msg else ""),
                     "last_message_date": last_msg.sent_at.isoformat() if last_msg else None
                 })
         else:
@@ -142,7 +222,7 @@ class ConsultationController:
                         "specialization": doctor.specialization,
                         "user_name": f"{doctor_user.first_name} {doctor_user.last_name}",
                         "profile_picture_url": f"{doctor_user.profile_picture_url}",
-                        "last_message": last_msg.message if last_msg else "",
+                        "last_message": "[Image]" if last_msg and not last_msg.message and last_msg.image_url else (last_msg.message if last_msg else ""),
                         "last_message_date": last_msg.sent_at.isoformat() if last_msg else None
                     })
                 else:
