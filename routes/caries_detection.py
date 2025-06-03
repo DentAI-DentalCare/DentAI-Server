@@ -33,7 +33,7 @@ def classify_YOLO_NAS_vertices():
 #     return CariesDetectionController.classify_efficientnet(efficientnet_model)
 
 
-# @caries_detection_blueprint.route("/YOLOv8-efficientnet/<efficientnet_model>", methods=["POST"])
-# @jwt_required()
-# def classify_YOLOv8_to_efficientnet_dynamic(efficientnet_model):
-#     return CariesDetectionController.detect_and_classify_YOLOv8_to_efficientnet(efficientnet_model)
+@caries_detection_blueprint.route("/YOLOv8-efficientnet/<efficientnet_model>", methods=["POST"])
+@jwt_required()
+def classify_YOLOv8_to_efficientnet_dynamic(efficientnet_model):
+    return CariesDetectionController.detect_and_classify_YOLOv8_to_efficientnet(efficientnet_model)

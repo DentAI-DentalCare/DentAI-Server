@@ -11,9 +11,9 @@ import json
 
 import requests
 from flask import Response
-# from tensorflow.keras.models import load_model
-# from tensorflow.keras.applications.efficientnet import preprocess_input
-# from tensorflow.keras.preprocessing.image import img_to_array
+from tensorflow.keras.models import load_model
+from tensorflow.keras.applications.efficientnet import preprocess_input
+from tensorflow.keras.preprocessing.image import img_to_array
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -24,129 +24,130 @@ class CariesDetectionController:
 
 
 
-    # @staticmethod
-    # def detect_and_classify_YOLOv8_to_efficientnet(efficientnet_model):
-    #     if 'image' not in request.files:
-    #         return jsonify({"error": "No image file provided"}), 400
+    @staticmethod
+    def detect_and_classify_YOLOv8_to_efficientnet(efficientnet_model):
+        if 'image' not in request.files:
+            return jsonify({"error": "No image file provided"}), 400
 
-    #     image_file = request.files['image']
-    #     if image_file.filename == '':
-    #         return jsonify({"error": "Empty filename"}), 400
+        image_file = request.files['image']
+        if image_file.filename == '':
+            return jsonify({"error": "Empty filename"}), 400
 
-    #     try:
-    #         project_root = current_app.root_path
-    #         temp_dir = os.path.join(project_root, "temp_uploads")
-    #         os.makedirs(temp_dir, exist_ok=True)
+        try:
+            project_root = current_app.root_path
+            temp_dir = os.path.join(project_root, "temp_uploads")
+            os.makedirs(temp_dir, exist_ok=True)
 
-    #         # Save input image
-    #         temp_filename = f"{uuid.uuid4().hex}.jpg"
-    #         image_path = os.path.join(temp_dir, temp_filename)
-    #         image_file.save(image_path)
+            # Save input image
+            temp_filename = f"{uuid.uuid4().hex}.jpg"
+            image_path = os.path.join(temp_dir, temp_filename)
+            image_file.save(image_path)
 
-    #         # Load models
-    #         YOLOv8_path = os.path.join(project_root, "models", "YOLOv8m_100epochs.pt")
-    #         efficientnet_path = os.path.join(project_root, "models", efficientnet_model)
-    #         if not os.path.exists(YOLOv8_path) or not os.path.exists(efficientnet_path):
-    #             return jsonify({"error": "Model(s) not found"}), 500
+            # Load models
+            YOLOv8_path = os.path.join(project_root, "models", "yolov8_detecttctcttttt.pt")
+            efficientnet_path = os.path.join(project_root, "models", efficientnet_model)
+            if not os.path.exists(YOLOv8_path) or not os.path.exists(efficientnet_path):
+                return jsonify({"error": "Model(s) not found"}), 500
 
-    #         YOLO_model = YOLO(YOLOv8_path)
-    #         efficientnet_model = load_model(efficientnet_path)
+            YOLO_model = YOLO(YOLOv8_path)
+            efficientnet_model = load_model(efficientnet_path)
 
-    #         image = cv2.imread(image_path)
-    #         original = image.copy()
-    #         results = YOLO_model(image_path)
+            image = cv2.imread(image_path)
+            original = image.copy()
+            results = YOLO_model(image_path)
 
-    #         CariesDetectionController.class_labels = {
-    #             0: "Caries Class 1",
-    #             1: "Caries Class 2",
-    #             2: "Caries Class 3",
-    #             3: "Caries Class 4",
-    #             4: "Caries Class 5"
-    #         }
+            CariesDetectionController.class_labels = {
+                0: "Caries Class 1",
+                1: "Caries Class 2",
+                2: "Caries Class 3",
+                3: "Caries Class 4",
+                4: "Caries Class 5"
+            }
 
-    #         class_colors = {
-    #             "Caries Class 1": (248, 170, 1),
-    #             "Caries Class 2": (34, 87, 255),
-    #             "Caries Class 3": (217, 17, 187),
-    #             "Caries Class 4": (32, 228, 26),
-    #             "Caries Class 5": (12, 27, 233),
-    #         }
+            class_colors = {
+                "Caries Class 1": (32, 228, 26),   # green
+                "Caries Class 2": (248, 170, 1),   # blue
+                "Caries Class 3": (234, 0, 255),  # GBR = Yellow ✅
+                "Caries Class 4":  (34, 87, 255),  # orange
+                "Caries Class 5": (12, 27, 233),   # red
+            }
 
-    #         detections = []
-    #         class_summary = defaultdict(int)
 
-    #         for box in results[0].boxes:
-    #             x1, y1, x2, y2 = map(int, box.xyxy[0])
-    #             crop = original[y1:y2, x1:x2]
+            detections = []
+            class_summary = defaultdict(int)
 
-    #             # Preprocess crop for EfficientNet
-    #             crop_img = cv2.resize(crop, (224, 224))
-    #             crop_img = Image.fromarray(crop_img)
-    #             crop_img = img_to_array(crop_img)
-    #             crop_img = preprocess_input(crop_img)
-    #             crop_img = np.expand_dims(crop_img, axis=0)
+            for box in results[0].boxes:
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                crop = original[y1:y2, x1:x2]
 
-    #             # Predict
-    #             preds = efficientnet_model.predict(crop_img)
-    #             class_id = int(np.argmax(preds))
-    #             class_name = CariesDetectionController.class_labels[class_id]
-    #             confidence = float(np.max(preds))
+                # Preprocess crop for EfficientNet
+                crop_img = cv2.resize(crop, (224, 224))
+                crop_img = Image.fromarray(crop_img)
+                crop_img = img_to_array(crop_img)
+                crop_img = preprocess_input(crop_img)
+                crop_img = np.expand_dims(crop_img, axis=0)
 
-    #             # Draw
-    #             color = class_colors.get(class_name, (255, 255, 255))
-    #             cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness=3)
-    #             label = f"{class_name} ({confidence:.2f})"
-    #             cv2.putText(image, label, (x1, y1 - 10),
-    #                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+                # Predict
+                preds = efficientnet_model.predict(crop_img)
+                class_id = int(np.argmax(preds))
+                class_name = CariesDetectionController.class_labels[class_id]
+                confidence = float(np.max(preds))
 
-    #             class_summary[class_name] += 1
-    #             detections.append({
-    #                 "class": class_name,
-    #                 "confidence": round(confidence, 3),
-    #                 "vertices": {"x1": x1, "y1": y1, "x2": x2, "y2": y2}
-    #             })
+                # Draw
+                color = class_colors.get(class_name, (255, 255, 255))
+                cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness=3)
+                # label = f"{class_name} ({confidence:.2f})"
+                # cv2.putText(image, label, (x1, y1 - 10),
+                #             cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-    #         # Save result
-    #         result_path = os.path.join(temp_dir, f"result_{temp_filename}")
-    #         cv2.imwrite(result_path, image)
+                class_summary[class_name] += 1
+                detections.append({
+                    "class": class_name,
+                    "confidence": round(confidence, 3),
+                    "vertices": {"x1": x1, "y1": y1, "x2": x2, "y2": y2}
+                })
 
-    #         # Prepare response
-    #         response = Response()
-    #         response.status_code = 200
-    #         response.headers['Content-Type'] = 'multipart/mixed; boundary=frame'
-    #         boundary = "frame"
-    #         boundary_bytes = f"--{boundary}\r\n".encode()
-    #         end_boundary = f"--{boundary}--\r\n".encode()
+            # Save result
+            result_path = os.path.join(temp_dir, f"result_{temp_filename}")
+            cv2.imwrite(result_path, image)
 
-    #         body = BytesIO()
-    #         body.write(boundary_bytes)
-    #         body.write(b"Content-Type: application/json\r\n\r\n")
-    #         body.write(json.dumps({
-    #             "summary": dict(class_summary),
-    #             "detections": detections
-    #         }).encode())
-    #         body.write(b"\r\n")
+            # Prepare response
+            response = Response()
+            response.status_code = 200
+            response.headers['Content-Type'] = 'multipart/mixed; boundary=frame'
+            boundary = "frame"
+            boundary_bytes = f"--{boundary}\r\n".encode()
+            end_boundary = f"--{boundary}--\r\n".encode()
 
-    #         body.write(boundary_bytes)
-    #         body.write(b"Content-Type: image/jpeg\r\n\r\n")
-    #         with open(result_path, "rb") as f:
-    #             body.write(f.read())
-    #         body.write(b"\r\n")
-    #         body.write(end_boundary)
-    #         response.set_data(body.getvalue())
+            body = BytesIO()
+            body.write(boundary_bytes)
+            body.write(b"Content-Type: application/json\r\n\r\n")
+            body.write(json.dumps({
+                "class_summary": dict(class_summary),
+                "detections": detections
+            }).encode())
+            body.write(b"\r\n")
 
-    #         os.remove(image_path)
-    #         os.remove(result_path)
-    #         try:
-    #             os.rmdir(temp_dir)
-    #         except OSError:
-    #             pass  
+            body.write(boundary_bytes)
+            body.write(b"Content-Type: image/jpeg\r\n\r\n")
+            with open(result_path, "rb") as f:
+                body.write(f.read())
+            body.write(b"\r\n")
+            body.write(end_boundary)
+            response.set_data(body.getvalue())
+
+            os.remove(image_path)
+            # os.remove(result_path)
+            # try:
+            #     os.rmdir(temp_dir)
+            # except OSError:
+            #     pass  
             
         
-    #         return response
+            return response
 
-    #     except Exception as e:
-    #         return jsonify({"error": str(e)}), 500
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
 
   
@@ -288,13 +289,15 @@ class CariesDetectionController:
 
             # Draw boxes and build class summary
             class_summary = defaultdict(int)
+        
             class_colors = {
-                "Caries Class 1": (248, 170, 1),
-                "Caries Class 2": (34, 87, 255),
-                "Caries Class 3": (217, 17, 187),
-                "Caries Class 4": (32, 228, 26),
-                "Caries Class 5": (12, 27, 233),
+                "Caries Class 1": (32, 228, 26),   # green
+                "Caries Class 2": (248, 170, 1),   # blue
+                "Caries Class 3": (234, 0, 255),  # GBR = Yellow ✅
+                "Caries Class 4":  (34, 87, 255),  # orange
+                "Caries Class 5": (12, 27, 233),   # red
             }
+
 
             for box in filtered_boxes:
                 class_name = box["class_name"]
@@ -372,13 +375,15 @@ class CariesDetectionController:
 
             class_summary = defaultdict(int)
            
+          
             class_colors = {
-                "Caries Class 1": (248, 170, 1),   # ARGB(255, 1, 170, 248) → BGR
-                "Caries Class 2": (34, 87, 255),   # Colors.deepOrange ≈ #FF5722
-                "Caries Class 3": (217, 17, 187),  # ARGB(255, 187, 17, 217)
-                "Caries Class 4": (32, 228, 26),   # ARGB(255, 26, 228, 32)
-                "Caries Class 5": (12, 27, 233),   # ARGB(255, 233, 27, 12)
+                "Caries Class 1": (32, 228, 26),   # green
+                "Caries Class 2": (248, 170, 1),   # blue
+                "Caries Class 3": (234, 0, 255),  # GBR = Yellow ✅
+                "Caries Class 4":  (34, 87, 255),  # orange
+                "Caries Class 5": (12, 27, 233),   # red
             }
+
 
 
 
@@ -435,12 +440,12 @@ class CariesDetectionController:
 
             with open(result_path, "rb") as f:
                 image_content = f.read()
-            os.remove(result_path)
+            # os.remove(result_path)
 
-            try:
-                os.rmdir(temp_dir)
-            except OSError:
-                pass  # Folder not empty or other issue, so skip deletion
+            # try:
+            #     os.rmdir(temp_dir)
+            # except OSError:
+            #     pass  # Folder not empty or other issue, so skip deletion
             
         
             response = Response()

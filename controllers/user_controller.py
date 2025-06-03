@@ -9,6 +9,7 @@ from middlewares.image_base64 import image_to_base64_middleware
 import os
 import cloudinary.uploader
 from urllib.parse import unquote
+import json
 
 
 class UserController:
@@ -139,25 +140,87 @@ class UserController:
         return jsonify({"message": "Profile picture deleted successfully"}), 200
 
     @staticmethod
-    def get_user_images():
-        current_user = get_jwt_identity()
-        user = User.query.filter_by(email=current_user).first()
+    def get_teeth_images():
+        current_user_email = get_jwt_identity()
+        user = User.query.filter_by(email=current_user_email).first()
+
+        images = UserImage.query.filter_by(user_id=user.user_id).order_by(UserImage.uploaded_at.desc()).all()
+
+        result = [{
+            "image_id": img.image_id,
+            "image_url": img.image_url,
+            "diagnosis": img.diagnosis,
+            "uploaded_at": img.uploaded_at.strftime("%Y-%m-%d %H:%M:%S")
+        } for img in images]
+
+        return jsonify(result), 200
+
+    
+    @staticmethod
+    def upload_teeth_image():
+        current_user_email = get_jwt_identity()
+        user = User.query.filter_by(email=current_user_email).first()
 
         if not user:
             return jsonify({"error": "User not found"}), 404
 
-        images = UserImage.query.filter_by(user_id=user.user_id).all()
+        if 'image' not in request.files or 'diagnosis' not in request.form:
+            return jsonify({"error": "Image and diagnosis are required"}), 400
 
-        image_list = []
-        for image in images:
-            if "/teeth/" in image.image_url:
-                image_list.append({
-                    "id": image.image_id,
-                    "uploaded_at": image.uploaded_at.isoformat(),
-                    "url": image.image_url
-                })
+        file = request.files['image']
+        diagnosis_json = request.form.get('diagnosis')
 
-        return jsonify({"images": image_list}), 200
+        if file.filename == '':
+            return jsonify({"error": "No selected image"}), 400
+
+        try:
+            diagnosis_data = json.loads(diagnosis_json)
+        except Exception as e:
+            return jsonify({"error": "Invalid diagnosis JSON"}), 400
+
+        # Upload to Cloudinary
+        upload_result = cloudinary.uploader.upload(
+            file,
+            folder=f"{user.email}/Teeth Images"
+        )
+        image_url = upload_result['secure_url']
+
+        # Save to DB
+        new_image = UserImage(
+            user_id=user.user_id,
+            image_url=image_url,
+            diagnosis=diagnosis_data
+        )
+        db.session.add(new_image)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Teeth image uploaded successfully",
+            "url": image_url,
+            "diagnosis": diagnosis_data
+        }), 201
+
+    @staticmethod
+    def delete_teeth_image(image_id):
+        current_user_email = get_jwt_identity()
+        user = User.query.filter_by(email=current_user_email).first()
+
+        image = UserImage.query.filter_by(image_id=image_id, user_id=user.user_id).first()
+        if not image:
+            return jsonify({"error": "Image not found"}), 404
+
+        # Extract public_id from the URL
+        try:
+            public_id = '/'.join(image.image_url.split('/')[-3:]).split('.')[0]
+            cloudinary.uploader.destroy(public_id)
+        except Exception:
+            pass  # Optional: log failure
+
+        db.session.delete(image)
+        db.session.commit()
+
+        return jsonify({"message": "Teeth image deleted successfully"}), 200
+
 
     @staticmethod
     def get_image_by_id(image_id):

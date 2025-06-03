@@ -22,17 +22,17 @@ def update_profile():
 def delete_account():
     return UserController.delete_account()
 
-# # POST /api/user/upload/teeth-image
-# @user_blueprint.route("/upload/teeth-image", methods=["POST"])
-# @jwt_required()
-# def upload_teeth_image():
-#     return UserController.upload_teeth_image()
+# POST /api/user/upload/teeth-image
+@user_blueprint.route("/upload/teeth-image", methods=["POST"])
+@jwt_required()
+def upload_teeth_image():
+    return UserController.upload_teeth_image()
 
-# # POST /api/user/upload/teeth-image
-# @user_blueprint.route("/delete/teeth-image/<int:image_id>", methods=["DELETE"])
-# @jwt_required()
-# def delete_teeth_image(image_id):
-#     return UserController.delete_teeth_image(image_id)
+# POST /api/user/upload/teeth-image
+@user_blueprint.route("/delete/teeth-image/<int:image_id>", methods=["DELETE"])
+@jwt_required()
+def delete_teeth_image(image_id):
+    return UserController.delete_teeth_image(image_id)
 
 # POST /api/user/upload/profile-image
 @user_blueprint.route("/upload/profile-image", methods=["POST"])
@@ -50,7 +50,7 @@ def delete_profile_image():
 @user_blueprint.route("/teeth-images", methods=["GET"])
 @jwt_required()
 def get_images():
-    return UserController.get_user_images()
+    return UserController.get_teeth_images()
 
 # GET /api/user/image/<id>
 @user_blueprint.route("/image/<int:image_id>", methods=["GET"])
