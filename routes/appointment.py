@@ -14,17 +14,17 @@ def book_appointment():
 def get_my_appointments():
     return AppointmentController.get_my_appointments()
 
-@appointment_blueprint.route("/<int:appointment_id>/cancel", methods=["PUT"])
+@appointment_blueprint.route("/<appointment_id>/cancel", methods=["PUT"])
 @jwt_required()
 def cancel_appointment(appointment_id):
     return AppointmentController.cancel_appointment(appointment_id)
 
-@appointment_blueprint.route("/<int:appointment_id>/complete", methods=["PUT"])
+@appointment_blueprint.route("/<appointment_id>/complete", methods=["PUT"])
 @jwt_required()
 def complete_appointment(appointment_id):
     return AppointmentController.complete_appointment(appointment_id)
 
-@appointment_blueprint.route("/available-timeslots/<int:doctor_id>", methods=["GET"])
+@appointment_blueprint.route("/available-timeslots/<doctor_id>", methods=["GET"])
 @jwt_required()
 def get_available_timeslots(doctor_id):
     return AppointmentController.get_available_timeslots(doctor_id)

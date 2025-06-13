@@ -29,7 +29,7 @@ def upload_teeth_image():
     return UserController.upload_teeth_image()
 
 # POST /api/user/upload/teeth-image
-@user_blueprint.route("/delete/teeth-image/<int:image_id>", methods=["DELETE"])
+@user_blueprint.route("/delete/teeth-image/<image_id>", methods=["DELETE"])
 @jwt_required()
 def delete_teeth_image(image_id):
     return UserController.delete_teeth_image(image_id)

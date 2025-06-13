@@ -4,6 +4,7 @@ from datetime import timedelta
 from config import Config
 from middlewares.auth_middleware import verify_token
 import cloudinary
+from flask_mongoengine import MongoEngine
 from config import Config
 from routes.auth import auth_blueprint
 from routes.user import user_blueprint
@@ -14,7 +15,8 @@ from routes.dummy_data import dummy_blueprint
 from routes.ask_a_dentist import ask_a_dentist_blueprint
 from routes.insurance import insurance_blueprint
 from routes.ocr import ocr_blueprint
-from models.user import db  # ✅ this line is key
+# from models.user import db  # ✅ this line is key
+from model import db  # ✅ this line is key
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -22,9 +24,9 @@ app.config.from_object(Config)
 # ✅ Init SQLAlchemy with app
 db.init_app(app)
 
-# Create tables (only in dev)
-with app.app_context():
-    db.create_all()
+# # Create tables (only in dev)
+# with app.app_context():
+#     db.create_all()
 
 cloudinary.config(
     cloud_name=Config.CLOUDINARY_CLOUD_NAME,

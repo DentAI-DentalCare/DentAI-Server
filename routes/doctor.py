@@ -9,12 +9,12 @@ doctor_blueprint = Blueprint("doctor", __name__)
 def list_doctors():
     return DoctorController.list_doctors()
 
-@doctor_blueprint.route("/<int:doctor_id>", methods=["GET"])
+@doctor_blueprint.route("/<doctor_id>", methods=["GET"])
 @jwt_required()
 def get_doctor(doctor_id):
     return DoctorController.get_doctor(doctor_id)
 
-@doctor_blueprint.route("/availability/<int:doctor_id>", methods=["GET"])
+@doctor_blueprint.route("/availability/<doctor_id>", methods=["GET"])
 @jwt_required()
 def get_availability(doctor_id):
     return DoctorController.get_availability(doctor_id)

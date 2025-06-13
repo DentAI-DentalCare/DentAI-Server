@@ -17,7 +17,7 @@ def get_my_conversations():
     return AskADentistController.get_my_conversations()
 
 # GET: Get all messages between me and a specific user (chat view)
-@ask_a_dentist_blueprint.route("/thread/<int:user_id>", methods=["GET"])
+@ask_a_dentist_blueprint.route("/thread/<user_id>", methods=["GET"])
 @jwt_required()
 def get_thread_with_user(user_id):
     return AskADentistController.get_thread_with_user(user_id)
