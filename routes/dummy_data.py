@@ -74,7 +74,7 @@ def create_dummy_data():
 
         # ─── Create 8 doctors with Cloudinary images ─────────────────────
         male_doctor_names   = ["Mohamed Hesham", "Ahmed Sameh", "Omar Nader", "Tarek Mohamed"]
-        female_doctor_names = ["Malak Ramy", "Menna Khaled", "Laila Amr", "Mona Hassan"]
+        female_doctor_names = ["Menna Khaled", "Laila Amr", "Mona Hassan", "Malak Ramy"]
         doctor_names        = male_doctor_names + female_doctor_names
         doctor_genders      = ["male"]*4 + ["female"]*4
 
@@ -122,9 +122,9 @@ def create_dummy_data():
                     "Endodontics", "Prosthodontics", "Adult Dentistry", "Elder Dentistry",
                     "Pediatric Dentistry", "Oral and Maxillofacial Surgery", "Oral Radiology"
                 ]),
-                bio=fake.text(max_nb_chars=250),
+                bio="Hi there! I’m a caring, patient-focused dentist dedicated to helping you smile with confidence. I specialize in preventive care and gentle cosmetic treatments, and I love teaching you the best techniques to keep your teeth healthy. I stay current with the latest dental technology so every visit is as comfortable and effective as possible. Let’s work together to make your smile shine!",
                 experience_years=random.randint(1, 30),
-                clinic_address=fake.address().replace("\n", " "),
+                clinic_address="Smile Bright Dental Clinic Building 20, Street 200, Degla, Maadi, Cairo, Egypt",
                 consultation_fee=random.choice(list(range(200, 2001, 50))),
                 average_rating=random.choice([2.5, 3.0, 3.5, 4.0, 4.5, 5.0]),
                 title=TitleEnum(title_str)

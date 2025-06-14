@@ -127,12 +127,20 @@ class AuthController:
         email    = data.get("email")
         password = data.get("password")
 
+        print(f"Received login request: {data}")
+
         if not email or not password:
             return jsonify({"error": "Email and password are required"}), 400
+        
+        print(f"Received login request: {data}")
 
         user = User.objects(email=email).first()
+        print(f"User found: {user.password if user else 'None'}")
+        print(f"Password provided: {user}")
         if not user or not check_password_hash(user.password, password):
             return jsonify({"error": "Invalid email or password"}), 401
+        
+        print(f"Received login request: {data}")
 
         # build JWT
         access_token = create_access_token(
