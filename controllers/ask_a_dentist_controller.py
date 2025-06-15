@@ -104,40 +104,62 @@ class AskADentistController:
     @staticmethod
     def get_my_conversations():
         current_email = get_jwt_identity()
-        user          = User.objects(email=current_email).first()
+        user = User.objects(email=current_email).first()
         if not user:
             return jsonify({"error": "User not found"}), 404
 
         result = []
+
         if user.role is RoleEnum.Doctor:
-            doctor  = Doctor.objects(user=user).first()
+            doctor = Doctor.objects(user=user).first()
             threads = ConsultationThread.objects(doctor=doctor)
             for t in threads:
-                p    = t.patient
+                p = t.patient
                 last = ConsultationMessage.objects(thread=t).order_by('-sent_at').first()
-                text = "[Image]" if last and not last.message and last.image_url else (last.message or "")
+
+                if last:
+                    if not last.message and last.image_url:
+                        text = "[Image]"
+                    else:
+                        text = last.message or ""
+                    date = last.sent_at.isoformat()
+                else:
+                    text = ""
+                    date = None
+
                 result.append({
                     "user_id":             str(p.id),
                     "user_name":           f"{p.first_name} {p.last_name}",
                     "profile_picture_url": p.profile_picture_url,
                     "last_message":        text,
-                    "last_message_date":   last.sent_at.isoformat() if last else None
+                    "last_message_date":   date
                 })
         else:
-            docs    = Doctor.objects()
+            docs = Doctor.objects()
             threads = {t.doctor.id: t for t in ConsultationThread.objects(patient=user)}
+
             for doc in docs:
-                usr    = doc.user
+                usr = doc.user
                 thread = threads.get(doc.id)
+
                 if thread:
                     last = ConsultationMessage.objects(thread=thread).order_by('-sent_at').first()
-                    text = "[Image]" if last and not last.message and last.image_url else (last.message or "")
-                    date = last.sent_at.isoformat() if last else None
+
+                    if last:
+                        if not last.message and last.image_url:
+                            text = "[Image]"
+                        else:
+                            text = last.message or ""
+                        date = last.sent_at.isoformat()
+                    else:
+                        text = ""
+                        date = None
                 else:
-                    text, date = "", None
+                    text = ""
+                    date = None
 
                 result.append({
-                    "user_id":           str(doc.id),               # <-- changed here
+                    "user_id":             str(doc.id),
                     "specialization":      doc.specialization,
                     "user_name":           f"{usr.first_name} {usr.last_name}",
                     "profile_picture_url": usr.profile_picture_url,
@@ -147,6 +169,7 @@ class AskADentistController:
 
         result.sort(key=lambda x: x['last_message_date'] or "", reverse=True)
         return jsonify({"conversations": result}), 200
+
 
 
     @staticmethod

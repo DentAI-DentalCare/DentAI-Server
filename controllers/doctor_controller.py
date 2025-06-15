@@ -36,7 +36,7 @@ class DoctorController:
                 "name":                 f"{user.first_name} {user.last_name}",
                 "email":                user.email,
                 "national_id":          user.national_id,
-                "address":              user.address,
+                "clinic_address":       doc.clinic_address,
                 "profile_picture_url":  user.profile_picture_url,
                 "gender":               user.gender.name,
                 "specialization":       doc.specialization,

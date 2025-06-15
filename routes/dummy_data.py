@@ -9,7 +9,7 @@ from model import (
     User,
     Doctor,
     TimeSlot,
-    Appointment,
+    Appointment, 
     UserImage,
     RoleEnum,
     TitleEnum,
@@ -51,6 +51,18 @@ def create_dummy_data():
             ("Youssef", "Hani"),
             ("Farah", "Tarek")
         ]
+        # Short clinic addresses to use
+        clinic_addresses = [
+    "ToothCare Clinic, 15 Talaat Harb St., Downtown, Cairo",
+    "Bright Dental, 8 El Merghany St., Heliopolis, Cairo",
+    "Smile Hub, 12 El Horreya St., Zamalek, Cairo",
+    "Pearl Dental, 5 Abbas El Akkad St., Nasr City, Cairo",
+    "Elite Dental, 3 Al Mesaha St., Dokki, Giza",
+    "Care Dental, 9 El Laselky St., Maadi, Cairo",
+    "Shiny Teeth, 2 Al Orouba St., Heliopolis, Cairo",
+    "White Smile, 6 El Thawra St., Mohandessin, Giza"
+]
+
         patients = []
         for first_name, last_name in arabic_patient_names:
             email = f"{first_name.lower()}.{last_name.lower()}@gmail.com"
@@ -74,7 +86,7 @@ def create_dummy_data():
 
         # ─── Create 8 doctors with Cloudinary images ─────────────────────
         male_doctor_names   = ["Mohamed Hesham", "Ahmed Sameh", "Omar Nader", "Tarek Mohamed"]
-        female_doctor_names = ["Menna Khaled", "Laila Amr", "Mona Hassan", "Malak Ramy"]
+        female_doctor_names = ["Menna Khaled","Malak Ramy", "Laila Amr", "Mona Hassan"]
         doctor_names        = male_doctor_names + female_doctor_names
         doctor_genders      = ["male"]*4 + ["female"]*4
 
@@ -124,7 +136,7 @@ def create_dummy_data():
                 ]),
                 bio="Hi there! I’m a caring, patient-focused dentist dedicated to helping you smile with confidence. I specialize in preventive care and gentle cosmetic treatments, and I love teaching you the best techniques to keep your teeth healthy. I stay current with the latest dental technology so every visit is as comfortable and effective as possible. Let’s work together to make your smile shine!",
                 experience_years=random.randint(1, 30),
-                clinic_address="Smile Bright Dental Clinic Building 20, Street 200, Degla, Maadi, Cairo, Egypt",
+                clinic_address=clinic_addresses[i % len(clinic_addresses)],  # Sequential assignment
                 consultation_fee=random.choice(list(range(200, 2001, 50))),
                 average_rating=random.choice([2.5, 3.0, 3.5, 4.0, 4.5, 5.0]),
                 title=TitleEnum(title_str)

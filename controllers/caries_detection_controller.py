@@ -11,9 +11,9 @@ import json
 
 import requests
 from flask import Response
-from tensorflow.keras.models import load_model
-from tensorflow.keras.applications.efficientnet import preprocess_input
-from tensorflow.keras.preprocessing.image import img_to_array
+# from tensorflow.keras.models import load_model
+# from tensorflow.keras.applications.efficientnet import preprocess_input
+# from tensorflow.keras.preprocessing.image import img_to_array
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -440,12 +440,12 @@ class CariesDetectionController:
 
             with open(result_path, "rb") as f:
                 image_content = f.read()
-            # os.remove(result_path)
+            os.remove(result_path)
 
-            # try:
-            #     os.rmdir(temp_dir)
-            # except OSError:
-            #     pass  # Folder not empty or other issue, so skip deletion
+            try:
+                os.rmdir(temp_dir)
+            except OSError:
+                pass  # Folder not empty or other issue, so skip deletion
             
         
             response = Response()
